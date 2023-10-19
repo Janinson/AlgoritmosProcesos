@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 class Tarea {
     private int id;
@@ -56,32 +53,38 @@ public class Algoritmos {
             tareas.add(new Tarea(i + 1, cputime, arrivalTime));
         }
 
-        System.out.println("Seleccione el algoritmo:");
-        System.out.println("1. FCFS");
-        System.out.println("2. SJN");
-        System.out.println("3. SRT");
-        System.out.println("4. Round Robin");
-        System.out.print("Elija una opción: ");
-        int choice = scanner.nextInt();
+        boolean ejecutarOtroAlgoritmo = true;
+        while (ejecutarOtroAlgoritmo) {
+            System.out.println("Seleccione el algoritmo:");
+            System.out.println("1. FCFS");
+            System.out.println("2. SJN");
+            System.out.println("3. SRT");
+            System.out.println("4. Round Robin");
+            System.out.print("Elija una opción: ");
+            int choice = scanner.nextInt();
 
-        // Llamar al algoritmo según la elección
-        switch (choice) {
-            case 1:
-                fcfs(tareas);
-                break;
-            case 2:
-                sjn(tareas);
-                break;
-            case 3:
-                srt(tareas);
-                break;
-            case 4:
-                System.out.print("Ingrese el quantum para Round Robin: ");
-                int quantum = scanner.nextInt();
-                roundRobin(tareas, quantum);
-                break;
-            default:
-                System.out.println("Opción no válida.");
+            // Llamar al algoritmo según la elección
+            switch (choice) {
+                case 1:
+                    fcfs(tareas);
+                    break;
+                case 2:
+                    sjn(tareas);
+                    break;
+                case 3:
+                    srt(tareas);
+                    break;
+                case 4:
+                    System.out.print("Ingrese el quantum para Round Robin: ");
+                    int quantum = scanner.nextInt();
+                    roundRobin(tareas, quantum);
+                    break;
+                default:
+                    System.out.println("Opción no válida.");
+            }
+            System.out.print("¿Desea ejecutar otro algoritmo? (Si/No): ");
+            String respuesta = scanner.next().toLowerCase();
+            ejecutarOtroAlgoritmo = respuesta.equals("si") || respuesta.equals("si");
         }
 
         scanner.close();
@@ -215,34 +218,32 @@ public class Algoritmos {
         int totalTurnaroundTime = 0;
         int totalWaitingTime = 0;
 
-        List<Tarea> tareaRestantes = new ArrayList<>(tareas);
+        Queue<Tarea> cola = new LinkedList<>(tareas);
 
-        while (!tareaRestantes.isEmpty()) {
-            for (Tarea tarea : tareaRestantes) {
-                if (tarea.getArrivalTime() <= currentTime) {
-                    int remainingTime = tarea.getRemainingTime();
-                    if (remainingTime <= quantum) {
-                        currentTime += remainingTime;
-                        tarea.setRemainingTime(0);
-                    } else {
-                        currentTime += quantum;
-                        tarea.setRemainingTime(remainingTime - quantum);
-                    }
+        while (!cola.isEmpty()) {
+            Tarea tarea = cola.poll();
+            int remainingTime = tarea.getRemainingTime();
 
-                    if (tarea.getRemainingTime() == 0) {
-                        int completionTime = currentTime;
-                        int turnaroundTime = completionTime - tarea.getArrivalTime();
-                        int waitingTime = turnaroundTime - tarea.getCputime();
+            if (remainingTime <= quantum) {
+                currentTime += remainingTime;
+                tarea.setRemainingTime(0);
+            } else {
+                currentTime += quantum;
+                tarea.setRemainingTime(remainingTime - quantum);
+            }
 
-                        System.out.println("Tarea " + tarea.getId() + ": Tiempo de finalización = " + completionTime
-                                + ", Latencia = " + turnaroundTime + ", Tiempo de espera = " + waitingTime);
+            if (tarea.getRemainingTime() == 0) {
+                int completionTime = currentTime;
+                int turnaroundTime = completionTime - tarea.getArrivalTime();
+                int waitingTime = turnaroundTime - tarea.getCputime();
 
-                        totalTurnaroundTime += turnaroundTime;
-                        totalWaitingTime += waitingTime;
+                System.out.println("Tarea " + tarea.getId() + ": Tiempo de finalización = " + completionTime
+                        + ", Latencia = " + turnaroundTime + ", Tiempo de espera = " + waitingTime);
 
-                        tareaRestantes.remove(tarea);
-                    }
-                }
+                totalTurnaroundTime += turnaroundTime;
+                totalWaitingTime += waitingTime;
+            } else {
+                cola.offer(tarea); // Coloca la tarea al final de la cola para su próxima ejecución.
             }
         }
 
@@ -252,5 +253,6 @@ public class Algoritmos {
         System.out.println("Tiempo de finalización promedio: " + averageTurnaroundTime);
         System.out.println("Tiempo de espera promedio: " + averageWaitingTime);
     }
+
 }
 
